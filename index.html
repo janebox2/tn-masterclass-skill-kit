@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masterclass Build System / Team True North</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Forum&family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --pearl: #FAF8F5;
+    --pearl-deep: #F2EDE5;
+    --pearl-warm: #ECE4D4;
+    --cacao: #2E1B14;
+    --cacao-soft: #4A3329;
+    --cacao-muted: #7A6359;
+    --espresso: #180D00;
+    --sky: #ABCDDD;
+    --sky-light: #DCE9F0;
+    --sky-deep: #7FA8BD;
+    --honey: #CEA435;
+    --honey-light: #F2E5BE;
+    --honey-deep: #A8851F;
+    --rule: #DDD2BF;
+  }
+
+  body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--cacao);
+    background: var(--pearl);
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 64px 80px;
+  }
+
+  @media print {
+    body { padding: 36px; font-size: 13px; background: #fff; }
+    h2 { page-break-before: always; }
+    .cover, h2:first-of-type { page-break-before: avoid; }
+    .step, .callout { page-break-inside: avoid; }
+  }
+
+  @media (max-width: 700px) {
+    body { padding: 24px 18px 60px; }
+    .cover { padding: 24px 0 16px; margin-bottom: 16px; }
+    .cover .eyebrow { font-size: 10px; letter-spacing: 3px; margin-bottom: 18px; }
+    .cover h1 { font-size: 36px; line-height: 1.1; margin-bottom: 16px; }
+    .cover .subtitle { font-size: 17px; margin-bottom: 18px; line-height: 1.45; }
+    .toc { padding: 22px 22px; margin-bottom: 36px; }
+    .toc ol { columns: 1; }
+    h2 { font-size: 10px; letter-spacing: 3px; margin: 36px 0 14px; }
+    h3 { font-size: 22px; margin: 22px 0 8px; }
+    .step { gap: 12px; margin-bottom: 16px; }
+    .step-num { width: 32px; height: 32px; font-size: 13px; }
+    .callout { padding: 14px 16px; margin: 16px 0; }
+  }
+
+  .cover { text-align: center; padding: 44px 0 20px; margin-bottom: 20px; position: relative; }
+  .cover::after { content: ""; display: block; width: 80px; height: 1px; background: var(--sky-deep); margin: 16px auto 0; }
+  .cover .eyebrow { font-family: 'Montserrat', sans-serif; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--honey-deep); margin-bottom: 24px; font-weight: 500; }
+  .cover h1 { font-family: 'Forum', Georgia, serif; font-size: 54px; font-weight: 400; color: var(--cacao); line-height: 1.05; letter-spacing: 1px; margin-bottom: 20px; text-transform: uppercase; }
+  .cover .version { display: inline-block; font-family: 'Montserrat', sans-serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--honey-deep); border: 1px solid var(--honey-deep); padding: 5px 16px; border-radius: 100px; margin-bottom: 22px; font-weight: 500; }
+  .cover .byline { font-family: 'Montserrat', sans-serif; font-size: 10.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cacao-soft); margin-bottom: 22px; font-weight: 500; }
+  .cover .subtitle { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: var(--cacao-soft); margin-bottom: 24px; font-style: italic; font-weight: 300; max-width: 560px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+  .cover .pills { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .pill { background: var(--cacao); color: var(--pearl); font-family: 'Montserrat', sans-serif; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 7px 16px; border-radius: 100px; font-weight: 500; }
+  .pill.sky { background: var(--sky-deep); }
+  .pill.honey { background: var(--honey); color: var(--cacao); }
+
+  .toc { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 4px; padding: 28px 36px; margin: 0 0 48px; position: relative; }
+  .toc::before { content: ""; position: absolute; top: -1px; left: 24px; width: 60px; height: 3px; background: var(--sky); }
+  .toc h3 { font-family: 'Montserrat', sans-serif; margin-top: 0; margin-bottom: 16px; font-size: 11px; color: var(--sky-deep); text-transform: uppercase; letter-spacing: 3.5px; font-weight: 600; }
+  .toc ol { margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 36px; }
+  .toc li { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; color: var(--cacao); margin-bottom: 6px; line-height: 1.4; display: flex; gap: 14px; break-inside: avoid; }
+  .toc li a { color: inherit; text-decoration: none; }
+  .toc li a:hover { color: var(--sky-deep); }
+  .toc li .num { font-family: 'Montserrat', sans-serif; color: var(--honey-deep); font-weight: 600; font-size: 11px; letter-spacing: 1px; min-width: 26px; padding-top: 3px; }
+
+  h2 { font-family: 'Montserrat', sans-serif; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--pearl); background: var(--cacao); margin: 52px -64px 24px; padding: 14px 64px; font-weight: 600; scroll-margin-top: 20px; }
+  h3 { font-family: 'Forum', Georgia, serif; font-size: 28px; font-weight: 400; color: var(--cacao); margin: 28px 0 10px; line-height: 1.3; letter-spacing: 0.5px; }
+  h4 { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; color: var(--cacao); text-transform: uppercase; letter-spacing: 1.5px; margin: 18px 0 8px; }
+  p { margin-bottom: 12px; color: var(--cacao); font-size: 16px; }
+  ul, ol { padding-left: 24px; margin-bottom: 14px; }
+  li { margin-bottom: 6px; font-size: 15px; line-height: 1.65; color: var(--cacao); }
+  strong { color: var(--cacao); font-weight: 600; }
+  em { color: var(--cacao-soft); font-style: italic; }
+  a { color: var(--sky-deep); text-decoration: underline; }
+
+  .lead { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 20px; line-height: 1.5; color: var(--cacao); font-style: italic; font-weight: 300; margin-bottom: 22px; padding-left: 22px; border-left: 2px solid var(--sky); }
+
+  .steps { margin: 18px 0; }
+  .step { display: flex; gap: 18px; margin-bottom: 20px; align-items: flex-start; }
+  .step-num { flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; background: var(--cacao); color: var(--pearl); font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+  .step-num.sky { background: var(--sky-deep); }
+  .step-num.honey { background: var(--honey); color: var(--cacao); }
+  .step-body { flex: 1; }
+  .step-body h4 { margin-top: 0; margin-bottom: 6px; }
+  .step-body p { margin-bottom: 8px; font-size: 15px; }
+  .step-body .note { background: var(--honey-light); border-left: 2px solid var(--honey-deep); padding: 12px 18px; font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic; color: var(--cacao-soft); border-radius: 0 4px 4px 0; margin-top: 10px; line-height: 1.6; }
+  .step-body .note strong { display: block; font-family: 'Montserrat', sans-serif; font-size: 9.5px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--honey-deep); margin-bottom: 6px; font-weight: 600; font-style: normal; }
+
+  .callout { border-left: 2px solid var(--sky-deep); background: var(--sky-light); padding: 18px 22px; margin: 20px 0; border-radius: 0 4px 4px 0; }
+  .callout.honey { border-left-color: var(--honey-deep); background: var(--honey-light); }
+  .callout.cacao { border-left-color: var(--cacao); background: var(--pearl-deep); }
+  .callout > strong:first-child { font-family: 'Montserrat', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--sky-deep); display: block; margin-bottom: 8px; font-weight: 600; }
+  .callout.honey > strong:first-child { color: var(--honey-deep); }
+  .callout.cacao > strong:first-child { color: var(--cacao); }
+  .callout p { margin: 0; font-size: 15px; line-height: 1.65; font-family: 'Cormorant Garamond', serif; }
+  .callout p + p { margin-top: 10px; }
+
+  .checklist { list-style: none; padding: 0; margin: 16px 0 22px; }
+  .checklist li { display: flex; gap: 14px; align-items: flex-start; padding: 11px 16px; background: #FFFFFF; border: 1px solid var(--rule); border-bottom: none; font-size: 15px; line-height: 1.55; }
+  .checklist li:first-child { border-radius: 4px 4px 0 0; }
+  .checklist li:last-child { border-bottom: 1px solid var(--rule); border-radius: 0 0 4px 4px; }
+  .checklist li .box { width: 18px; height: 18px; border: 1.5px solid var(--rule); border-radius: 3px; flex-shrink: 0; margin-top: 2px; background: var(--pearl); }
+  .checklist li .item-body { flex: 1; }
+  .checklist li .item-body em { display: block; font-size: 13px; margin-top: 4px; color: var(--cacao-muted); font-style: italic; line-height: 1.5; }
+
+  .checklist-label { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cacao); margin: 28px 0 8px; padding-bottom: 8px; border-bottom: 2px solid var(--honey); }
+
+  hr { border: none; border-top: 1px solid var(--rule); margin: 36px 0; }
+  .ornament { text-align: center; margin: 40px 0; color: var(--sky-deep); font-family: 'Forum', serif; font-size: 22px; letter-spacing: 14px; }
+
+  .closing-card { background: var(--espresso); color: var(--pearl); border-radius: 4px; padding: 32px 36px; margin: 36px 0; }
+  .closing-card .label { font-family: 'Montserrat', sans-serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--honey); margin-bottom: 18px; font-weight: 600; }
+  .closing-card h3 { font-family: 'Forum', serif; color: var(--pearl); font-size: 32px; margin: 0 0 14px; font-weight: 400; letter-spacing: 0.5px; line-height: 1.15; }
+  .closing-card p { color: #DDD2BF; font-size: 16px; line-height: 1.7; margin-bottom: 10px; font-family: 'Cormorant Garamond', serif; }
+  .closing-card .paths { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 18px; }
+  .path-card { flex: 1 1 220px; background: rgba(250,248,245,0.06); border: 1px solid rgba(250,248,245,0.18); border-radius: 4px; padding: 16px 18px; }
+  .path-card .path-label { font-family: 'Montserrat', sans-serif; font-size: 9.5px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--honey); margin-bottom: 8px; font-weight: 600; }
+  .path-card code { font-family: 'Montserrat', sans-serif; font-size: 13px; color: var(--pearl); display: block; line-height: 1.55; }
+  .path-card a.btn { display: inline-block; margin-top: 4px; font-family: 'Montserrat', sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--espresso); background: var(--pearl); padding: 8px 16px; border-radius: 100px; text-decoration: none; font-weight: 600; }
+  .path-card a.btn:hover { background: var(--honey-light); }
+
+  .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--rule); text-align: center; }
+  .footer-meta { font-family: 'Montserrat', sans-serif; font-size: 9.5px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--cacao-muted); margin-top: 10px; }
+  .footer-meta strong { color: var(--sky-deep); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="eyebrow">Team True North &mdash; Skill Kit</div>
+  <h1>Masterclass<br>Build System</h1>
+  <div class="version">Version 1.0</div>
+  <div class="byline">For Funnel Owners</div>
+  <div class="subtitle">Three Claude skills that take you from a blank page to a finished, high-converting masterclass &mdash; in your own voice, for your own audience.</div>
+  <div class="pills">
+    <span class="pill">Setup</span>
+    <span class="pill sky">Build ICP</span>
+    <span class="pill honey">Build Masterclass</span>
+  </div>
+</div>
+
+<div class="callout cacao">
+  <strong>Read this first</strong>
+  <p>You don't inherit anyone else's calibrations. <code>setup</code> spends about fifteen minutes learning your voice, your ideal client, and your offer before either build skill writes a single word &mdash; so what comes out sounds like you, not like whoever built this kit.</p>
+</div>
+
+<div class="toc">
+  <h3>What's Inside</h3>
+  <ol>
+    <li><span class="num">01</span><a href="#need">What you'll need</a></li>
+    <li><span class="num">02</span><a href="#install">Get the kit installed</a></li>
+    <li><span class="num">03</span><a href="#setup">Skill one &mdash; Setup</a></li>
+    <li><span class="num">04</span><a href="#icp">Skill two &mdash; Build ICP</a></li>
+    <li><span class="num">05</span><a href="#masterclass">Skill three &mdash; Build Masterclass</a></li>
+    <li><span class="num">06</span><a href="#nocode">No Claude Code?</a></li>
+  </ol>
+</div>
+
+<h2 id="need">01 / What You'll Need</h2>
+<p class="lead">Four things, and you're ready to start.</p>
+<ul class="checklist">
+  <li><span class="box"></span><div class="item-body"><strong>Claude Code.</strong> The desktop app is easiest &mdash; no terminal required. The CLI and IDE extension work identically.<em>Don't have it? See the "No Claude Code" chapter at the end.</em></div></li>
+  <li><span class="box"></span><div class="item-body"><strong>Real writing of your own.</strong> A couple of published emails, captions, or a sales page.<em>Setup won't calibrate to a voice that isn't on the page yet.</em></div></li>
+  <li><span class="box"></span><div class="item-body"><strong>Web access</strong> for the research phase of Build ICP.<em>Optional &mdash; it builds from your interview alone if web isn't available.</em></div></li>
+  <li><span class="box"></span><div class="item-body"><strong>A Canva connection</strong>, only if you want the optional Phase 3 deck build.<em>The Phase 2 slide map is a complete, human-buildable deliverable on its own.</em></div></li>
+</ul>
+
+<h2 id="install">02 / Get The Kit Installed</h2>
+<p class="lead">Everything technical happens on Claude's side. This is four clicks.</p>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Download</h4>
+      <p>Get the kit as a zip file.</p>
+      <a href="masterclass-build-system-skill-kit.zip" class="btn" style="display:inline-block;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--pearl);background:var(--cacao);padding:9px 18px;border-radius:100px;text-decoration:none;font-weight:600;">Download the kit (.zip)</a>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body"><h4>Unzip</h4><p>Double-click the downloaded file.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><h4>Drag</h4><p>Drag the <strong>.claude</strong> folder it contains into your business folder &mdash; the folder you open in Claude Code.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h4>Paste this one message into Claude Code</h4>
+      <div class="note"><strong>Paste exactly this</strong>Run the setup skill to get me set up for the Masterclass Build System.</div>
+    </div>
+  </div>
+</div>
+<div class="callout honey">
+  <strong>Every project, or every machine?</strong>
+  <p>Skills dropped into a project's <code>.claude/skills/</code> load only in that folder. To make them available everywhere on your machine, drag the three skill folders into <code>~/.claude/skills/</code> instead.</p>
+</div>
+
+<div class="ornament">&#10022;</div>
+
+<h2 id="setup">03 / Skill One &mdash; Setup</h2>
+<p class="lead">Run once, before either build skill. It refuses to build from nothing, and it never makes you re-explain what it can already find.</p>
+<div class="steps">
+  <div class="step">
+    <div class="step-num honey">1</div>
+    <div class="step-body"><h4>It looks before it asks</h4><p>Claude reads your business folder first &mdash; about docs, past emails, captions, a CLAUDE.md, prior work &mdash; and reports back what it already pieced together, marked confident, guessing, or missing.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num honey">2</div>
+    <div class="step-body"><h4>It interviews only the gaps</h4><p>One question at a time, never a form, across three passes: your <strong>voice</strong>, a starting sketch of your <strong>ideal client</strong>, and your current <strong>offer</strong>.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num honey">3</div>
+    <div class="step-body"><h4>It drafts four calibration files</h4><p><code>about-me.md</code>, <code>voice-rules.md</code>, <code>ideal-client.md</code>, and <code>my-offer.md</code>, saved into an <code>ABOUT ME/</code> folder. You see every file before it's saved &mdash; your edit always wins.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num honey">4</div>
+    <div class="step-body"><h4>It ends with proof, not a folder</h4><p>A short dress rehearsal: it writes just the opening of a class in your voice and asks &mdash; <em>does this sound like you?</em> &mdash; before handing you to Build ICP.</p></div>
+  </div>
+</div>
+
+<h2 id="icp">04 / Skill Two &mdash; Build ICP</h2>
+<p class="lead">Turns your sketch into one real human, felt so vividly you could write straight to them.</p>
+<div class="steps">
+  <div class="step">
+    <div class="step-num sky">1</div>
+    <div class="step-body"><h4>The interview</h4><p>One question at a time about the business, the offer, and the transformation you help someone make &mdash; then deeper: a real Tuesday, what exhausts them, what they secretly want, what they're afraid of, what they've already tried and why it failed, the exact words in their own head.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num sky">2</div>
+    <div class="step-body">
+      <h4>The mirror move</h4>
+      <p>In personal, relationship-driven businesses, the ideal client is often a version of the person being interviewed.</p>
+      <div class="note"><strong>Worth knowing</strong>If answers keep coming out generic, the questions turn on you directly &mdash; your own honest pains and fears are usually the truest picture of your audience.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num sky">3</div>
+    <div class="step-body"><h4>Real research</h4><p>Once the interview's done, Claude looks for real people who match &mdash; Reddit, reviews, forums, comments &mdash; and quotes their actual language, not a paraphrase.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num sky">4</div>
+    <div class="step-body"><h4>The dossier</h4><p>Pains, fears, desires, and objections &mdash; every one written as the feeling underneath, never the behavior. Ranked top 10 each, plus 10 ad hooks, 10 content ideas, 5 class titles, and a handoff block Build Masterclass reads automatically.</p></div>
+  </div>
+</div>
+
+<h2 id="masterclass">05 / Skill Three &mdash; Build Masterclass</h2>
+<p class="lead">The governing law: never sell the thing. Sell the emotion underneath it.</p>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body"><h4>Feed it the finished ICP</h4><p>The handoff block Build ICP ends with, or a hand-written one shaped the same way.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body"><h4>A short presenter intake</h4><p>Your before-story and turning point, your proof, the one big promise, the three discoveries you'll teach, and the offer &amp; CTA as they stand today.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><h4>Phase 1 &mdash; the full script</h4><p>The complete spoken class, start to finish, built on the fixed 17-part spine.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body"><h4>Phase 2 &mdash; the slide map</h4><p>A numbered, slide-by-slide breakdown separating the on-screen line from what you actually say.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body"><h4>Phase 3 &mdash; optional Canva build</h4><p>On request, Claude builds the actual deck from the Phase 2 map. The slide map alone is a complete, human-buildable deliverable.</p></div>
+  </div>
+</div>
+
+<div class="ornament">&#10022;</div>
+
+<h2 id="nocode">06 / No Claude Code?</h2>
+<p class="lead">Get the desktop app, or start on paper.</p>
+<div class="callout">
+  <strong>Easiest path</strong>
+  <p>The Claude desktop app (Mac or Windows) is the non-technical-friendly version &mdash; no terminal. Sign in, open your business folder, and paste the message from Chapter 02.</p>
+</div>
+
+<div class="closing-card">
+  <div class="label">Ready When You Are</div>
+  <h3>Two ways in.</h3>
+  <p>Pick whichever matches what you've got installed.</p>
+  <div class="paths">
+    <div class="path-card">
+      <div class="path-label">Have Claude Code</div>
+      <code>Run the setup skill to get me set up for the Masterclass Build System.</code>
+    </div>
+    <div class="path-card">
+      <div class="path-label">No Claude Code yet</div>
+      <p style="color:#DDD2BF;font-family:'Cormorant Garamond',serif;font-size:15px;margin-bottom:10px;">Fill out the ideal-client worksheet on paper &mdash; then paste the prompt it builds you into Claude.ai or ChatGPT.</p>
+      <a href="worksheet.html" class="btn">Open the worksheet</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p style="font-size:13px;color:var(--cacao-muted);">Questions or a broken step? Bring it back to Jane.</p>
+  <div class="footer-meta">Team True North &middot; <strong>Masterclass Build System</strong> &middot; V1.0</div>
+</div>
+
+</body>
+</html>
